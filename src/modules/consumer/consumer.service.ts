@@ -21,18 +21,41 @@ export class ConsumerService {
 
   @Cron('0 * * * * *')
   async processOrders() {
-    const pendingOrders = await this.getPendingOrders();
 
-    for await (const order of pendingOrders) {
-      await this.prisma.order.update({
-        where: {
-          id: order.id,
-        },
-        data: {
-          status: orderStatus.COMPLETED,
-        },
-      });
-      console.log(`Order ${order.id} has been processed`);
+    let pending = true
+
+    while(pending) {
+      pending = await this.prisma.$transaction(async (tx) => {
+        const pendingOrders: any[] = await tx.$queryRaw`
+          select o.*
+          from "Order" o 
+          where o.status = 'PENDING'
+          order by o.created_at asc 
+          limit 50
+          for update skip locked
+        `;
+
+        if(!pendingOrders.length) {
+          return false
+        }
+  
+        await Promise.all(
+          pendingOrders.map(async order => {
+            await tx.order.update({
+              where: {
+                id: order.id
+              },
+              data: {
+                status: orderStatus.COMPLETED
+              }
+            })
+  
+            console.log(`Order ${order.id} has been processed`);
+          })
+        )
+
+        return true
+      })
     }
   }
 }
