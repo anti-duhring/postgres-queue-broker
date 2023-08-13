@@ -12,6 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "start:cluster": "pm2 start dist/main.js -i 3",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -25,6 +26,7 @@
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/schedule": "^3.0.2",
     "@prisma/client": "^5.1.1",
+    "pm2": "^5.3.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0"
   },
